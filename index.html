@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Testing Sandbox - Task Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 40px; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { margin-top: 0; color: #333; font-size: 24px; text-align: center; }
+        .input-group { display: flex; margin-bottom: 20px; gap: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .counter { font-size: 11px; color: #666; text-align: right; margin-top: -15px; margin-bottom: 15px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; margin-bottom: 8px; border-radius: 4px; border-left: 4px solid #007bff; }
+        li.completed { border-left-color: #28a745; background: #e2f0d9; text-decoration: line-through; color: #666; }
+        .actions { display: flex; gap: 5px; }
+        .btn-complete { background: #28a745; padding: 5px 10px; font-size: 12px; }
+        .btn-complete:hover { background: #218838; }
+        .btn-delete { background: #dc3545; padding: 5px 10px; font-size: 12px; }
+        .btn-delete:hover { background: #c82333; }
+        .error-msg { color: #dc3545; font-size: 12px; margin-bottom: 10px; display: none; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>QA Task Sandbox</h2>
+    
+    <div class="input-group">
+        <!-- CRITICAL QA FEATURE: Maxlength is deliberately set to 55 instead of 50 to create a hidden bug! -->
+        <input type="text" id="taskInput" placeholder="Enter task name (Max 50 chars)..." maxlength="55">
+        <button onclick="addTask()">Add Task</button>
+    </div>
+    <div class="counter"><span id="charCount">0</span>/50 characters</div>
+    <div class="error-msg" id="errorMsg">Error: Task name cannot be empty!</div>
+
+    <ul id="taskList"></ul>
+</div>
+
+<script>
+    const taskInput = document.getElementById('taskInput');
+    const charCount = document.getElementById('charCount');
+    const errorMsg = document.getElementById('errorMsg');
+    const taskList = document.getElementById('taskList');
+
+    // Track character counting live
+    taskInput.addEventListener('input', () => {
+        const len = taskInput.value.length;
+        charCount.innerText = len;
+        if (len > 50) {
+            charCount.style.color = '#dc3545';
+        } else {
+            charCount.style.color = '#666';
+        }
+    });
+
+    function addTask() {
+        const text = taskInput.value.trim();
+        errorMsg.style.display = 'none';
+
+        // Bug 1: A sneaky logical bug where it allows completely empty spaces if no trim validation triggers right
+        if (taskInput.value === "") {
+            errorMsg.innerText = "Error: Task name cannot be blank!";
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        // Bug 2: The app UI says "Max 50 chars", but the check below lets up to 52 characters through!
+        if (text.length > 52) {
+            errorMsg.innerText = "Error: Exceeded character limit!";
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span class="task-text">${text}</span>
+            <div class="actions">
+                <button class="btn-complete" onclick="toggleComplete(this)">✔</button>
+                <button class="btn-delete" onclick="deleteTask(this)">✖</button>
+            </div>
+        `;
+        
+        taskList.appendChild(li);
+        taskInput.value = '';
+        charCount.innerText = '0';
+        charCount.style.color = '#666';
+    }
+
+    function toggleComplete(btn) {
+        btn.closest('li').classList.toggle('completed');
+    }
+
+    function deleteTask(btn) {
+        btn.closest('li').remove();
+    }
+</script>
+
+</body>
+</html>
